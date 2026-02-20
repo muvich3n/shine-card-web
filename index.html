@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shine Card - GPU 光泽效果演示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #fff;
+      margin-bottom: 40px;
+      font-size: 1.5rem;
+      opacity: 0.9;
+    }
+
+    .card-container {
+      position: relative;
+      width: 300px;
+      height: 420px;
+      perspective: 1000px;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 20px;
+    }
+
+    /* 光泽层 */
+    .shine {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 20px;
+      background: linear-gradient(
+        125deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 60%,
+        transparent 100%
+      );
+      background-size: 200% 200%;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover .shine {
+      opacity: 1;
+      animation: shine-move 1.5s ease-in-out infinite;
+    }
+
+    @keyframes shine-move {
+      0% {
+        background-position: 200% 200%;
+      }
+      100% {
+        background-position: -200% -200%;
+      }
+    }
+
+    /* 彩虹全息效果 */
+    .holographic {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 20px;
+      background: conic-gradient(
+        from 0deg at 50% 50%,
+        rgba(255, 0, 0, 0.1) 0deg,
+        rgba(255, 165, 0, 0.1) 60deg,
+        rgba(255, 255, 0, 0.1) 120deg,
+        rgba(0, 255, 0, 0.1) 180deg,
+        rgba(0, 255, 255, 0.1) 240deg,
+        rgba(0, 0, 255, 0.1) 300deg,
+        rgba(255, 0, 255, 0.1) 360deg
+      );
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      mix-blend-mode: color-dodge;
+    }
+
+    .card:hover .holographic {
+      opacity: 0.6;
+      animation: holo-rotate 3s linear infinite;
+    }
+
+    @keyframes holo-rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* 边框发光 */
+    .glow {
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 22px;
+      background: linear-gradient(
+        45deg,
+        #ff00ff,
+        #00ffff,
+        #ffff00,
+        #ff00ff
+      );
+      background-size: 400% 400%;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      filter: blur(10px);
+    }
+
+    .card:hover .glow {
+      opacity: 0.8;
+      animation: glow-shift 3s ease infinite;
+    }
+
+    @keyframes glow-shift {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    /* 说明文字 */
+    .info {
+      margin-top: 40px;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      font-size: 0.9rem;
+      max-width: 300px;
+      line-height: 1.6;
+    }
+
+    .info span {
+      color: #00ffff;
+    }
+
+    /* 响应式 */
+    @media (max-width: 400px) {
+      .card-container {
+        width: 260px;
+        height: 364px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Shine Card Web</h1>
+  
+  <div class="card-container" id="cardContainer">
+    <div class="glow"></div>
+    <div class="card" id="card">
+      <img 
+        src="https://picsum.photos/400/560" 
+        alt="Card" 
+        class="card-image"
+        id="cardImage"
+      >
+      <div class="shine"></div>
+      <div class="holographic"></div>
+    </div>
+  </div>
+
+  <p class="info">
+    将鼠标悬停在卡片上查看 <span>光泽效果</span><br>
+    Web 版本使用 CSS 动画模拟<br>
+    原生版本使用 GPU Shader
+  </p>
+
+  <script>
+    const card = document.getElementById('card');
+    const container = document.getElementById('cardContainer');
+
+    // 3D 倾斜效果
+    container.addEventListener('mousemove', (e) => {
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = (y - centerY) / 10;
+      const rotateY = (centerX - x) / 10;
+      
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    container.addEventListener('mouseleave', () => {
+      card.style.transform = 'rotateX(0) rotateY(0)';
+    });
+
+    // 移动端触摸支持
+    container.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = (y - centerY) / 10;
+      const rotateY = (centerX - x) / 10;
+      
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    container.addEventListener('touchend', () => {
+      card.style.transform = 'rotateX(0) rotateY(0)';
+    });
+  </script>
+</body>
+</html>
