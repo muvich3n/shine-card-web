@@ -15,6 +15,10 @@ GPU 光泽效果的 Web 演示版本。
 
 <https://shine-card-web.vercel.app>
 
+## 一键部署
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/muvich3n/shine-card-web)
+
 ## 本地运行
 
 ```bash
